@@ -22,20 +22,20 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank
     private String firstName;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank
     private String lastName;
 
-    @NotBlank(message = "Email is required")
+    @NotBlank
     @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "Phone Number is required")
+    @NotBlank
     private String phone;
 
-    @NotBlank(message = "Password is required")
+    @NotBlank
     private String password;
 
 

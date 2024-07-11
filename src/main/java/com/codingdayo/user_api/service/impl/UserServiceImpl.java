@@ -3,6 +3,7 @@ package com.codingdayo.user_api.service.impl;
 import com.codingdayo.user_api.dto.LoginRequest;
 import com.codingdayo.user_api.dto.RegisterRequest;
 import com.codingdayo.user_api.dto.Response;
+import com.codingdayo.user_api.exceptions.EmailAlreadyExistsException;
 import com.codingdayo.user_api.exceptions.OurException;
 import com.codingdayo.user_api.model.Organisation;
 import com.codingdayo.user_api.model.User;
@@ -14,8 +15,10 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,7 +52,7 @@ public class UserServiceImpl implements UserService {
         try {
 
             if (userRepository.existsByEmail(registerRequest.getEmail())){
-                throw new OurException("Email already exists");
+                throw new EmailAlreadyExistsException("Email already exists");
             }
 
             User user = new User();
@@ -90,19 +93,13 @@ public class UserServiceImpl implements UserService {
                     )));
 
 
-     } catch (ConstraintViolationException ex) {
-
-            response.setStatusCode(422);
+     }catch (EmailAlreadyExistsException e) {
+            throw e;
+        }
+            catch (OurException e) {
             response.setStatus("Bad Request");
             response.setMessage("Registration unsuccessful");
-            List<Map<String, String>> errors = new ArrayList<>();
-            for (ConstraintViolation cv : ex.getConstraintViolations()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("field", cv.getPropertyPath().toString());
-                error.put("message", cv.getMessage());
-                errors.add(error);
-            }
-            response.setData(Map.of("errors", errors));
+            response.setStatusCode(400);
         }
 
 
@@ -134,11 +131,8 @@ public class UserServiceImpl implements UserService {
                             "phone", user.getPhone()
                     )));
 
-        } catch (OurException e) {
-            response.setStatus("Bad Request");
-            response.setMessage("Authentication failed");
-            response.setStatusCode(401);
-
+        } catch (BadCredentialsException e) {
+            throw e;
         }
         return response;
     }
